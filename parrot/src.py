@@ -11,7 +11,7 @@ from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import variable_scope
 from tensorflow.python.training import optimizer
 from tensorflow.python.ops.clip_ops import clip_by_value
-from crow.dataset import mnist
+from parrot.dataset import mnist
 
 def random_variable(shape, stddev):
     return tf.Variable(tf.truncated_normal(shape, stddev=stddev))
