@@ -69,37 +69,6 @@ def softmax(array):
     array = array - np.max(array) # オーバーフロー対策
     return np.exp(array) / np.sum(np.exp(array))
 
-def matmul_BN_prelu_dropout_with_param(x, w_size, stddev, is_training_holder, keep_holder):
-    #tf.size(x[0])は、xの形状が100(バッチサイズ) * 50 であれば、50を取得する
-    w_shape = (tf.size(x[0]), w_size)
-    w = random_variable(w_shape, stddev)
-    prelu_param = zeros_variable(w_size)
-    param = {"w":w, "prelu":prelu_param}
-
-    matmul = tf.matmul(x, w)
-    BN = batch_normalization(matmul, is_training_holder)
-    activation = tanh_exp(BN)
-    dropout = tf.nn.dropout(activation, keep_holder)
-    return dropout, param
-
-def matmul_prelu_output(x, w, b, prelu_param, output_func):
-    matmul = tf.matmul(x, w) + b
-    activation = tanh_exp(matmul)
-    return output_func(activation)
-
-def matmul_prelu_dropout_output_with_param(x, output_size, stddev, keep_holder, output_func):
-    w_shape = (tf.size(x[0]), output_size)
-    w = random_variable(w_shape, stddev)
-    b = random_variable([output_size], stddev)
-    prelu_param = zeros_variable(output_size)
-    param = {"w":w, "b":b, "prelu":prelu_param}
-
-    matmul = tf.matmul(x, w) + b
-    activation = tanh_exp(matmul)
-    dropout = tf.nn.dropout(activation, keep_holder)
-    output = output_func(dropout)
-    return output, param
-
 def accuracy(output, target_label):
     correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(target_label, 1))
     return tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -122,13 +91,13 @@ def upper_confidence_bound1(average_value, total_simu_num, each_simu_num, X):
 def boltzmann_distribution(array, temperature_parameter):
     return array ** (1 / temperature_parameter) / np.sum(array ** (1 / temperature_parameter))
 
-def sigmoid_to_tanh(sigmoid):
-    assert sigmoid >= 0.0 and sigmoid <= 1.0
-    return (2 * sigmoid) - 1
+def sigmoid_y_to_tanh_y(sigmoid_y):
+    assert sigmoid_y >= 0.0 and sigmoid_y <= 1.0
+    return (2 * sigmoid_y) - 1
 
-def tanh_to_sigmoid(tanh):
-    assert tanh >= -1.0 and tanh <= 1.0
-    return (0.5 * tanh) + 0.5
+def tanh_y_to_sigmoid_y(tanh_y):
+    assert tanh_y >= -1.0 and tanh_y <= 1.0
+    return (0.5 * tanh_y) + 0.5
 
 def max_indices(data):
     max_ = max(data)
@@ -167,14 +136,14 @@ def boltzmann_random(array, temperature_parameter):
     assert False, "たぶんおそらくもしかしたら計算途中でNonになっている可能性が高いかもしれないと思うよ"
 
 def load_mnist(flatten, binary):
-    (input_data, target_label), (test_input_data, test_target_label) = \
+    (train_data, target_data), (test_data, test_target) = \
         mnist.load_mnist(flatten=flatten, one_hot_label=True, normalize=True)
 
     if binary:
-        input_data = np.where(input_data != 0, 1, 0)
-        test_input_data = np.where(test_input_data != 0, 1, 0)
+        train_data = np.where(train_data != 0, 1, 0)
+        test_data = np.where(test_data != 0, 1, 0)
 
-    return input_data, target_label, test_input_data, test_target_label
+    return train_data, target_data, test_data, test_target
 
 class AdaBoundOptimizer(optimizer.Optimizer):
     def __init__(self, learning_rate=0.001, final_lr=0.1, beta1=0.9, beta2=0.999,
