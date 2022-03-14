@@ -88,6 +88,9 @@ def cross_entropy(output, target_label):
 def upper_confidence_bound1(average_value, total_simu_num, each_simu_num, X):
     return average_value + (X * math.sqrt(2 * math.log(total_simu_num) / each_simu_num))
 
+def calc_updated_q(q_array, next_q_array, r, alpha, gamma):
+    return q_array + alpha * (r + gamma * max(next_q_array) - q_array)
+
 def boltzmann_distribution(array, temperature_parameter):
     return array ** (1 / temperature_parameter) / np.sum(array ** (1 / temperature_parameter))
 
@@ -364,8 +367,7 @@ class AdaBoundOptimizer(optimizer.Optimizer):
         return control_flow_ops.group(*update_ops + [update_beta1, update_beta2, update_gamma],
                                       name=name_scope)
 
-
 if __name__ == "__main__":
-    data = [0, 1, 2, 5, 4, 5]
-    for _ in range(100):
-        print(epsilon_greedy(data, 0.01))
+    q_array = np.array([0.5, 0.45, 0.55])
+    next_q_array = np.array([0.6, 0.2, 0.0])
+    print(calc_updated_q(q_array, next_q_array, -1.0, 0.01, 0.9))
