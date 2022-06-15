@@ -85,11 +85,12 @@ def cross_entropy(output, target_label):
     clip_output = tf.clip_by_value(output, 1e-10, 1.0)
     return tf.reduce_mean(-tf.reduce_sum(target_label * tf.log(clip_output), axis=1))
 
-def upper_confidence_bound1(average_value, total_simu_num, each_simu_num, X):
-    return average_value + (X * math.sqrt(2 * math.log(total_simu_num) / each_simu_num))
+def upper_confidence_bound1(average_value, total_trial, trial, X):
+    return average_value + (X * math.sqrt(2 * math.log(total_trial) / trial))
 
-def calc_updated_q(q_array, next_q_array, r, alpha, gamma):
-    return q_array + alpha * (r + gamma * max(next_q_array) - q_array)
+#gammaは割引率
+def updated_q(q_array, next_q_array, reward, learning_rate, gamma):
+    return q_array + learning_rate * (reward + gamma * max(next_q_array) - q_array)
 
 def boltzmann_distribution(array, temperature_parameter):
     return array ** (1 / temperature_parameter) / np.sum(array ** (1 / temperature_parameter))
@@ -102,12 +103,9 @@ def tanh_y_to_sigmoid_y(tanh_y):
     assert tanh_y >= -1.0 and tanh_y <= 1.0
     return (0.5 * tanh_y) + 0.5
 
-def max_indices(data):
+def argmaxes(data):
     max_ = max(data)
     return [i for i, ele in enumerate(data) if ele == max_]
-
-def max_index_random_choice(data):
-    return random.choice(max_indices(data))
 
 def epsilon_greedy(data, random_percent):
     assert random_percent >= 0 and random_percent <= 1.0
@@ -368,6 +366,6 @@ class AdaBoundOptimizer(optimizer.Optimizer):
                                       name=name_scope)
 
 if __name__ == "__main__":
-    q_array = np.array([0.5, 0.45, 0.55])
-    next_q_array = np.array([0.6, 0.2, 0.0])
-    print(calc_updated_q(q_array, next_q_array, -1.0, 0.01, 0.9))
+    q_array = np.array([0.3, 0.2, 0.5, 0.3])
+    next_q_array = np.array([0,5, 0.4, 0.3, 0.2])
+    print(updated_q(q_array, next_q_array, 1.0, 0.001, 1.0))
